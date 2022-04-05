@@ -1,0 +1,489 @@
+import java.sql.*;
+import java.util.*;
+public class ticket_booking
+{
+	Connection con=null;
+	Connection getConnection()throws Exception
+	{
+		Class.forName("com.mysql.cj.jdbc.Driver");
+		con = DriverManager.getConnection("jdbc:mysql://localhost:3306/Movie","root","MohanaShree@27");
+        return con;
+	}
+	
+		public static void login(Scanner sc , Connection con) throws Exception
+		{
+			System.out.println("Press 1 for 'Admin Login'\nPress 2 for 'Customer Login' ");
+			int login=sc.nextInt();
+			if(login==1)
+			{
+				admin_login(sc , con);
+			}
+			else
+			{
+				user_login(sc , con); 
+			}
+		}
+		public static void admin_login(Scanner sc, Connection con) throws Exception
+		{
+			Statement stm=con.createStatement();
+			System.out.println("Admin Username => " );
+			String uname=sc.next();
+			System.out.println("Admin Password => " );
+			String pass=sc.next();
+			String sql="select *from admin_login where user_name='"+uname+"' and password='"+pass+"' ";
+			ResultSet res= stm.executeQuery(sql);
+			if(res.next())
+			{
+				System.out.println();
+				System.out.println("	login sucess !!!	");
+				System.out.println();
+				int iend=0;
+				do
+				{	
+					iend=0;
+					System.out.println("Enter the numbers respectively to modify :	");
+					System.out.println();
+					System.out.println("1 Add Movie");			
+					System.out.println("2 Update Price for Ticket");
+					System.out.println("3 Delete Movie");
+					System.out.println("4 login");
+					int itest=sc.nextInt();
+					switch(itest) 
+					{
+						case 1:
+						{
+							addmovie(sc,con);
+							break;
+						}
+						case 2:
+						{
+							updateprice(sc,con);
+							break;
+						}
+						case 3:
+						{
+							deletemovie(sc,con);
+							break;
+						}
+						case 4:
+						{
+							login(sc,con);
+							break;
+						}
+					}
+					if(iend==0)
+					{
+						System.out.println();
+						System.out.println("	Press '0' to return Main Menu  ");
+						System.out.println("	Press '1' to Exit   ");
+						int k=sc.nextInt();
+						if(k==0)
+						{
+							iend++;
+						}	
+						else
+						{	
+							System.out.println("	Thank you for your response!!!");	
+						}
+					}
+					}while(iend>0);
+					}
+					else
+					{
+						System.out.println();
+						System.out.println("Invalid Username or Password -_- !");
+					}
+		}
+		static void addmovie(Scanner sc,Connection con)throws Exception
+		{
+			Statement stmt=con.createStatement();
+			System.out.println("Enter Number of Movies to be Added : ");
+			int isize=sc.nextInt();
+			for(int i=0;i<isize;i++)
+			{
+				System.out.println("Enter the Movie id :");
+				int id=sc.nextInt();
+				String sql3="select * from movie where movie_id='"+id+"'";
+				ResultSet res3=stmt.executeQuery(sql3);
+				if(!res3.next())
+				{
+				
+					System.out.println("Enter the Movie Name : ");
+					String mname=sc.next();
+					int iend=0;
+					do
+					{
+							iend=0;
+						System.out.println("Enter the Seats Maximum is 100:");
+						int iseat=sc.nextInt();
+						System.out.println("Enter the number seats to be allocated in gold and price:");
+						int gold=sc.nextInt();
+						int gp=sc.nextInt();
+						System.out.println("Enter the number seats to be allocated in silver and price :");
+						int silver=sc.nextInt();
+						int sp=sc.nextInt();
+						System.out.println("Enter the number seats to be allocated in platinum and price:");
+						int platinum=sc.nextInt();
+						int pp=sc.nextInt();
+						int sum=gold+silver+platinum;
+						String date="";
+						String time="";
+						float rat=0;
+						int rating=0;
+						if(sum==iseat)
+						{
+							System.out.println("Succesfully Allocated.....");
+							System.out.println("Enter the Available Date [YYYY-MM-DD]:");
+							date=sc.next();
+							System.out.println("Enter the Available Time [HH:MM:AM]:");
+							time=sc.next();
+							System.out.println("Enter the Rating :");
+							rat=sc.nextFloat();
+						}
+						else
+						{
+							System.out.println("You have Entered Many or Less number of Seats");
+							iend++;
+					     }
+					String sql1="Insert into movie values('"+id+"','"+mname+"','"+iseat+"','"+date+"','"+time+"','"+rat+"')";
+					int res1=stmt.executeUpdate(sql1);
+					String sql2="Insert into seats values('"+id+"','"+gold+"','"+silver+"','"+platinum+"','"+gp+"','"+sp+"','"+pp+"','"+mname+"')";
+					int res2=stmt.executeUpdate(sql2);
+					System.out.println("Record "+res1+"has been Updated Sucessfully");
+					}while(iend>0);
+				}
+				else
+				{
+					System.out.println("Movie Id already Exists");
+				}
+			}
+		}
+		static void updateprice(Scanner sc,Connection con)throws Exception
+		{
+			Statement stmt=con.createStatement();
+			String sql1="select *from movie";
+			ResultSet res=stmt.executeQuery(sql1);
+			while(res.next())
+			{
+				System.out.println("Movie id : "+res.getInt(1)+"\nMovie name : "+res.getString(2)+"");
+			}
+			System.out.println("Enter the Movie id :");
+			int id=sc.nextInt();
+				String sql2="select Movie_name , goldprice , silverprice , platinumprice from seats where movie_id='"+id+"'";
+				ResultSet res2=stmt.executeQuery(sql2);
+				
+				while(res2.next())
+				{
+					System.out.println("Movie Name :"+res2.getString(1)+"\nCurrent price of Gold: "+res2.getInt(2)+"\nCurrent price of silver: "+res2.getInt(3)+"\nCurrent price of platinum: "+res2.getInt(4));
+				}
+				System.out.println("Enter Updated amount for Gold :");
+				int gp=sc.nextInt();
+				System.out.println("Enter Updated amount for Silver :");
+				int sp=sc.nextInt();
+				System.out.println("Enter Updated amount for Platinum :");
+				int pp=sc.nextInt();
+				String sql4="update seats set goldprice='"+gp+"',silverprice='"+sp+"',platinumprice='"+pp+"' where movie_id='"+id+"'";
+				int res4=stmt.executeUpdate(sql4);
+				System.out.println(res4+" Record(s) has been updated");
+		}
+		static void deletemovie(Scanner sc,Connection con)throws Exception
+		{
+			Statement stmt=con.createStatement();
+			String sql2="select *from movie";
+			ResultSet res2=stmt.executeQuery(sql2);
+			System.out.println("Running Movies are Displayed Below :\n");
+			while(res2.next())
+			{
+				System.out.println("Movie ID :"+res2.getInt(1)+"\nMovie Name :"+res2.getString(2));
+			}
+			System.out.println("Enter Number of Movies to be deleted : ");
+			int isize=sc.nextInt();
+			for(int i=0;i<isize;i++)
+			{
+				System.out.println("Enter the Movie id :");
+				int id=sc.nextInt();
+				String sql1="delete from movie where movie_id='"+id+"' ";
+				int res1=stmt.executeUpdate(sql1);
+				System.out.println("Record "+res1+"has been deleted");
+			}
+		}
+		static void user_login(Scanner sc,Connection con)throws Exception
+		{
+			Statement stm=con.createStatement();
+			System.out.println("User Username => " );
+			String uname=sc.next();
+			System.out.println("User Password => " );
+			String pass=sc.next();
+			String sql="select *from customer_login where user_name='"+uname+"' and password='"+pass+"' ";
+			ResultSet res= stm.executeQuery(sql);
+			if(res.next())
+			{
+				System.out.println();
+				System.out.println("	login sucess !!!	");
+				System.out.println();
+				System.out.println("1 Currently Running Movies");
+				System.out.println("2 book tickets");
+				System.out.println("3 My Ticket");
+				int itest=sc.nextInt();
+				switch(itest) 
+				{
+					case 1:
+					{
+						viewmovie(sc,con);
+						break;
+					}
+					case 2:
+					{
+						booktickets(sc,con,uname);
+						break;
+					}
+					case 3:
+					{
+						myticket(sc,con,uname);
+						break;
+					}
+				}
+			}
+			else
+			{
+				System.out.println();
+				System.out.println("Invalid Username or Password -_- !");
+			}
+		}
+		static void viewmovie(Scanner sc,Connection con)throws Exception
+		{
+			Statement stmt=con.createStatement();
+			ResultSet rs=stmt.executeQuery("Select * from movie");
+			while(rs.next()) 
+			{
+				System.out.println("Movie ID: "+rs.getString(1)+"\nMovie Name: "+rs.getString(2)+"\nSeats: "+rs.getString(3)+"\nDate: "+rs.getString(4)+"\nTime :"+rs.getString(5)+"\nRating :"+rs.getString(6));
+			}
+		}
+		static void booktickets(Scanner sc,Connection con,String uname)throws Exception 
+		{
+			Statement stmt=con.createStatement();
+			ResultSet rs3=stmt.executeQuery("Select * from movie");
+			while(rs3.next()) 
+			{
+				System.out.println("Movie ID: "+rs3.getString(1)+"\nMovie Name: "+rs3.getString(2)+"\nSeats: "+rs3.getString(3));
+			}
+			System.out.println("Enter Movie ID: ");
+			int id=sc.nextInt();
+			String sql3="select movie_id from movie where movie_id='"+id+"'";
+			ResultSet res3=stmt.executeQuery(sql3);
+			if(res3.next())
+			{
+				int capacity=0;
+				String mov="";
+				ResultSet rs=stmt.executeQuery("Select * from movie where movie_id='"+id+"'");
+				while(rs.next()) 
+				{
+					System.out.println("Movie Name: "+rs.getString(2)+"\nSeats: "+rs.getString(3)+"\nDate "+rs.getString(4)+"\nTime :"+rs.getString(5)+"\nRating "+rs.getString(6));
+					capacity=rs.getInt(3);
+					mov=rs.getString(2);
+				}
+				System.out.println("Enter the Date [YYYY-MM-DD]:");
+				String date=sc.next();
+				ResultSet rs1=stmt.executeQuery("Select * from movie where movie_id='"+id+"'and date='"+date+"'");
+				if(rs1.next())
+				{
+					System.out.println("Seats are Available....filling soon");
+				}
+				else
+				{
+					System.out.println(" Seats are not Available on Respective Date");
+				}
+				System.out.println("Enter the Time [HH:MMAM]:");
+				String time=sc.next();
+				ResultSet rs6=stmt.executeQuery("Select * from movie where movie_id='"+id+"'and time='"+time+"'");
+				if(rs6.next())
+				{
+					System.out.println("Seats are Available on selected time....filling soon");
+				}
+				else
+				{
+					System.out.println(" Seats are not Available on Respective Time");
+				}
+				System.out.println("Enter No. of Tickets Max Ticket can be '5' can be only booked:");
+				int seat=sc.nextInt();
+				if(seat<6)
+				{
+					int sub=capacity-seat;
+					System.out.println("Available Seats in Three classes:\n");
+					int r=stmt.executeUpdate("update movie set seats='"+sub+"' where movie_id='"+id+"'");
+					ResultSet rs4=stmt.executeQuery("Select * from seats where movie_id='"+id+"';");
+					while(rs4.next()) 
+					{
+						System.out.println("Available Seats in Gold:"+rs4.getInt(2)+"\nAvailable Seats in Silver:"+rs4.getInt(3)+"\nAvailable Seats in Platinum "+rs4.getInt(4));
+					}
+					System.out.println("1 for gold class");
+					System.out.println("2 for silver class");
+					System.out.println("3 for platinum class");
+					int it=sc.nextInt();
+					switch(it)
+					{
+						case 1:
+						{
+							System.out.println("You have Selected Gold Class >>>");
+							ResultSet rs2=stmt.executeQuery("Select  gold , goldprice from seats where movie_id='"+id+"'");
+							int s2=0;
+							int p=0;
+							while(rs2.next()) 
+							{
+								System.out.println("Available Seats in Gold:"+rs2.getInt(1)+"\n Ticket Cost :"+rs2.getInt(2));
+								s2=rs2.getInt(1);
+								p=rs2.getInt(2);
+							}
+							int s1=s2-seat;
+							int r2=stmt.executeUpdate("update seats set  gold='"+s1+"' where movie_id='"+id+"'");
+							int mul=seat*p;
+							System.out.println("Total Coast \n"+mul);
+							System.out.println("1 to pay");
+							int n1=sc.nextInt();
+							if(n1==1)
+							{
+								System.out.println("Enter Username or upi :");
+								String upi=sc.next();
+								System.out.println("Enter password : ");
+								String pass=sc.next();
+								System.out.println("Amount Paid Sucessfully");
+								System.out.println("Your have been Booked and Seats have Been Allocated");
+								char ch=65;
+								int n=0;
+								String pay="Paid";
+								String g="gold";
+								for(int i=0;i<seat;i++)
+								{
+									System.out.println("Seats No: "+ch+"-"+n);
+									//ch++;
+									String sql="Insert into ticket values('"+id+"','"+mov+"','"+seat+"','"+g+"','"+ch+n+"','"+pay+"','"+uname+"')";
+									int res6=stmt.executeUpdate(sql);
+									n++;
+								}
+							}
+							break;
+						}
+						case 2:
+						{
+							System.out.println("You have Selected Silver Class >>>");
+							ResultSet rs2=stmt.executeQuery("Select silver , silverprice from seats where movie_id='"+id+"';");
+							int s2=0;
+							int p=0;
+							while(rs2.next()) 
+							{
+								System.out.println("Available Seats in Silver:"+rs2.getInt(1)+"\n Ticket Cost :"+rs2.getInt(2));
+								s2=rs2.getInt(1);
+								p=rs2.getInt(2);
+							}
+							int s1=s2-seat;
+							int r2=stmt.executeUpdate("update seats set  silver='"+s1+"' where movie_id='"+id+"'");
+							int mul=seat*p;
+							System.out.println("Total Coast \n"+mul);
+							System.out.println("1 to pay");
+							int n1=sc.nextInt();
+							if(n1==1)
+							{
+								System.out.println("Enter Username or upi :");
+								String upi=sc.next();
+								System.out.println("Enter password : ");
+								String pass=sc.next();
+								System.out.println("Amount Paid Sucessfully");
+								System.out.println("Your have been Booked and Seats have Been Allocated");
+								char ch=65;
+								int n=0;
+								String s="silver";
+								String pay="paid";
+								for(int i=0;i<seat;i++)
+								{
+									System.out.println("Seats No: "+ch+"-"+n);
+									//ch++;
+									String sql="Insert into ticket values('"+id+"','"+mov+"','"+seat+"','"+s+"','"+ch+n+"','"+pay+"','"+uname+"')";
+									int res6=stmt.executeUpdate(sql);
+									n++;
+								}
+							}
+							break;
+						}
+						case 3:
+						{
+							System.out.println("You have Selected platinum Class >>>");
+							ResultSet rs2=stmt.executeQuery("Select platinum , platinumprice from seats where movie_id='"+id+"';");
+							int s2=0;
+							int p=0;
+			
+							while(rs2.next()) 
+							{
+								System.out.println("Available Seats in platinum:"+rs2.getInt(1)+"\n Ticket Cost :"+rs2.getInt(2));
+								s2=rs2.getInt(1);
+								p=rs2.getInt(2);
+							}
+							int s1=s2-seat;
+							int r2=stmt.executeUpdate("update seats set  platinum='"+s1+"' where movie_id='"+id+"'");
+							int mul=seat*p;
+							System.out.println("Total Coast \n"+mul);
+							System.out.println("1 to pay");
+							int n1=sc.nextInt();
+							if(n1==1)
+							{
+								System.out.println("Enter Username or upi :");
+								String upi=sc.next();
+								System.out.println("Enter password : ");
+								String pass=sc.next();
+								System.out.println("Amount Paid Sucessfully");
+								System.out.println("Your have been Booked and Seats have Been Allocated");
+								char ch=65;
+								int n=1;
+								String pl="platinum";
+								String pay="paid";
+								for(int i=0;i<seat;i++)
+								{
+									System.out.println("Seats No: "+ch+"-"+n);
+									//ch++;
+									String sql="Insert into ticket values('"+id+"','"+mov+"','"+seat+"','"+pl+"','"+ch+n+"','"+pay+"','"+uname+"')";
+									int res6=stmt.executeUpdate(sql);
+									n++;
+								}
+							}
+							
+							break;
+						}
+					}
+				}
+				else
+				{
+					System.out.println("you have entered "+seat+" kindly check again ");
+				}
+			}
+				else
+				{
+					System.out.println("Movie Id already exists");
+				}
+		}
+		static void myticket(Scanner sc,Connection con,String uname)throws Exception
+		{
+			Statement stmt=con.createStatement();
+			String sql1="Select movie_name , count(no_of_ticket),class , payment_status from ticket where username='"+uname+"'";
+			ResultSet res =stmt.executeQuery(sql1);
+			while(res.next())
+			{
+				System.out.println("Movie Name : "+res.getString(1)+"\nNo of Tickets booked : "+res.getString(2)+"\nclass : "+res.getString(3)+"\nPayment Status : "+res.getString(4));
+			}
+			String sql2="Select seat_no from ticket where username='"+uname+"'";
+			ResultSet res1 =stmt.executeQuery(sql2);
+			System.out.println("seat no : ");
+			while(res1.next())
+			{
+				System.out.println("  "+res1.getString(1));
+			}
+		}
+		public static void main(String[] args)throws Exception 
+		{
+			System.out.println("Sathyam Cinimas");
+			System.out.println();
+			Scanner sc=new Scanner(System.in);
+			ticket_booking r=new ticket_booking();
+			Connection obj=r.getConnection();
+			r.login(sc,obj);
+		}
+
+	}
